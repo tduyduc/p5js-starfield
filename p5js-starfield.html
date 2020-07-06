@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>P5.js Animated Starfield by T.D. Stoneheart</title>
+    <script src="p5.min.js"></script>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: black;
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      new p5(starfield);
+      function starfield(P5) {
+        class Star {
+          angle = 0;
+          distance = 1;
+          red = 255;
+          green = 255;
+          blue = 255;
+
+          static get ACCELERATION() {
+            return 1.025;
+          }
+          static get GROWTH() {
+            return 0.4;
+          }
+          static get MINIMUM_DISTANCE_FACTOR() {
+            return 0.05;
+          }
+          static get ALPHA_EXPONENT() {
+            return 2;
+          }
+
+          constructor() {
+            this.angle = generateAngle();
+            this.red = generateUint8Value();
+            this.green = generateUint8Value();
+            this.blue = generateUint8Value();
+          }
+
+          get x() {
+            return Math.cos(this.angle) * this.distance;
+          }
+
+          get y() {
+            return Math.sin(this.angle) * this.distance;
+          }
+
+          get size() {
+            return this.distance ** Star.GROWTH;
+          }
+
+          get alpha() {
+            const minimumDistance =
+              Math.min(P5.width, P5.height) * Star.MINIMUM_DISTANCE_FACTOR;
+            return (
+              Math.min(
+                1,
+                (this.distance / minimumDistance) ** Star.ALPHA_EXPONENT
+              ) * 255
+            );
+          }
+
+          isInsideViewport() {
+            return this.x <= P5.width / 2 && this.y <= P5.height / 2;
+          }
+
+          update() {
+            this.distance *= Star.ACCELERATION;
+            return this;
+          }
+
+          render() {
+            P5.stroke(this.red, this.green, this.blue, this.alpha);
+            P5.strokeWeight(this.size);
+            P5.point(this.x, this.y);
+            return this;
+          }
+        }
+
+        let stars = [];
+
+        const appMethods = {
+          setup() {
+            P5.createCanvas(P5.windowWidth, P5.windowHeight - 4);
+            P5.frameRate(60);
+          },
+          windowResized() {
+            P5.resizeCanvas(P5.windowWidth, P5.windowHeight - 4);
+          },
+          draw() {
+            P5.background(0);
+            P5.translate(P5.width / 2, P5.height / 2);
+
+            stars = stars
+              .filter(star => star.isInsideViewport())
+              .concat([new Star()]);
+            for (const star of stars) star.update().render();
+          },
+        };
+        Object.assign(P5, appMethods);
+
+        function generateAngle() {
+          return Math.random() * 2 * Math.PI;
+        }
+
+        function generateUint8Value() {
+          return Math.floor(Math.random() * 256);
+        }
+      }
+    </script>
+  </body>
+</html>
